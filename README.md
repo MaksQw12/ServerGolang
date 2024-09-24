@@ -1,2 +1,3 @@
 # ServerGolang
-Just test project for fun
+
+server on Go(lang) and Sqlite (modernc.org/sqlite)
