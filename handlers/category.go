@@ -2,17 +2,11 @@ package handlers
 
 import (
 	"net/http"
+	"servergolang/database"
 	"servergolang/models"
 
 	"github.com/gin-gonic/gin"
 )
-
-var categories = []models.Category{
-	{ID: 1, Name: "Category 1", },
-	{ID: 2, Name: "Category 2", },
-	{ID: 3, Name: "Category 3", },	
-}
-
 
 // GetCategories godoc
 // @Summary Get all categories
@@ -22,5 +16,29 @@ var categories = []models.Category{
 // @Success 200 {array} models.Category
 // @Router /categories [get]
 func GetCategories(c *gin.Context) {
-	c.JSON(http.StatusOK, categories);
+	var categories []models.Category
+	database.DB.Preload("Products").Find( &categories )
+	c.JSON(http.StatusOK, categories)
+}
+
+
+// CreateCategory godoc
+// @Summary Create a new category
+// @Description Create a new category in the database
+// @Tags categories
+// @Accept json
+// @Produce json
+// @Param category body models.Category true "Category to create"
+// @Success 201 {object} models.Category
+// @Failure 400 {object} gin.H{"error": string}
+// @Router /categories [post]
+func CreateCategory(	c *gin.Context) {
+	var category models.Category
+	if err := c.ShouldBindJSON(&category); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	database.DB.Create(&category)
+	c.JSON( http.StatusOK, category )
 }

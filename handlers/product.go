@@ -2,17 +2,11 @@ package handlers
 
 import (
 	"net/http"
+	"servergolang/database"
 	"servergolang/models"
 
 	"github.com/gin-gonic/gin"
 )
-
-var products = []models.Product{
-	{ID: 1, Name: "Product 1", Description: "This is product 1", Price: 9.99, Quantity: 10, CategoryID: 1},
-	{ID: 2, Name: "Product 2", Description: "This is product 2", Price: 19.99, Quantity: 20, CategoryID: 2},
-	{ID: 3, Name: "Product 3", Description: "This is product 3", Price: 29.99, Quantity: 30, CategoryID: 3},
-}
-
 
 // GetProducts godoc
 // @Summary Get all products
@@ -22,5 +16,29 @@ var products = []models.Product{
 // @Success 200 {array} models.Product
 // @Router /products [get]
 func GetProducts(c *gin.Context) {
-	c.JSON(http.StatusOK, products);
+	var products []models.Product
+	database.DB.Preload("Category").Find(&products)
+	c.JSON(http.StatusOK, products)
+}
+
+
+// CreateProduct godoc
+// @Summary Create a new product
+// @Description Create a new product in the database
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param product body models.Product true "Product to create"
+// @Success 201 {object} models.Product
+// @Failure 400 {object} gin.H{"error": string}
+// @Router /products [post]
+func CreateProduct(c *gin.Context) {
+	var product models.Product
+	if err := c.ShouldBindJSON(&product); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	database.DB.Create(&product)
+	c.JSON(http.StatusOK, product)
 }
